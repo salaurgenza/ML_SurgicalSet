@@ -1,0 +1,54 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Classificazione Strumento</title>
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+  <style>
+    body { font-family: Arial; text-align: center; padding: 40px; }
+    #image-preview { max-width: 300px; border: 1px solid #ccc; margin-top: 20px; }
+    #result { font-size: 20px; margin-top: 20px; font-weight: bold; }
+    input { margin-top: 20px; }
+  </style>
+</head>
+<body>
+
+  <h2>Riconoscimento: Pinza da Ressi</h2>
+  <input type="file" id="fileInput" accept="image/*">
+  <br>
+  <img id="image-preview" src="" alt="Anteprima immagine">
+  <div id="result">Seleziona un'immagine da classificare</div>
+
+  <script>
+    const URL = "./model/";
+    let model, maxPredictions;
+
+    async function loadModel() {
+      model = await tmImage.load(URL + "model.json", URL + "metadata.json");
+      maxPredictions = model.getTotalClasses();
+      console.log("✅ Modello caricato");
+    }
+
+    loadModel();
+
+    document.getElementById("fileInput").addEventListener("change", async (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const img = document.getElementById("image-preview");
+      img.src = URL.createObjectURL(file);
+      img.onload = async () => {
+        const prediction = await model.predict(img);
+        prediction.sort((a, b) => b.probability - a.probability);
+
+        const label = prediction[0].className;
+        const prob = (prediction[0].probability * 100).toFixed(1);
+
+        document.getElementById("result").innerText = `🔍 ${label} - ${prob}%`;
+      };
+    });
+  </script>
+
+</body>
+</html>
